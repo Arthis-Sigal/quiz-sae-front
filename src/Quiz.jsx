@@ -15,7 +15,8 @@ const Quiz = ({ questions }) => {
     const [start, setStart] = React.useState(false);
     const [timerSecond, setTimerSecond] = React.useState(0);
     const [timerMinute, setTimerMinute] = React.useState(0);
-    const [currentQuestion, setCurrentQuestion] = React.useState(0);
+    const [currentQuestion, setCurrentQuestion] = useState(questions.questions[question]);
+    const [questionCount, setQuestionCount] = React.useState(0);
     const usedQuestions = React.useRef([]);
 
   
@@ -28,18 +29,18 @@ const Quiz = ({ questions }) => {
     
         if (value == questions.questions[question].answer) {
           setScore(score + 1);
-          setCurrentQuestion(currentQuestion + 1);
+          setQuestionCount(questionCount + 1);
             shuffle();
-          if (currentQuestion + 1 === totalQuestions) {
+          if (questionCount + 1 === totalQuestions) {
             setFinish(true);
             //on stop le timer
             clearInterval();
           }
           
         } else {
-            setCurrentQuestion(currentQuestion + 1);
+            setQuestionCount(questionCount + 1);
             shuffle();
-          if (currentQuestion + 1 === totalQuestions) {
+          if (questionCount + 1 === totalQuestions) {
             setFinish(true);
             //on stop le timer
             clearInterval();
@@ -72,6 +73,8 @@ const Quiz = ({ questions }) => {
     let questionNumber = Math.floor(Math.random() * questions.questions.length);
         //console.log(questionNumber);
         setQuestion(questionNumber);
+        setCurrentQuestion(questions.questions[questionNumber]);
+
     //on crée un tableau pour stoquer le questionNumber
  
     //console.log(usedQuestions.current);
@@ -195,7 +198,7 @@ const dataToServer = (e) => {
                         fontSize: '2em',
                         margin: '1em',
                         textTransform: 'capitalize',
-                    }}>question : {currentQuestion + 1} / {totalQuestions - 1 } </Typography>
+                    }}>question : {questionCount + 1} / {totalQuestions - 1 } </Typography>
                     <Box sx={{
                         textAlign: 'center',
                         display: 'flex',
@@ -251,6 +254,10 @@ const dataToServer = (e) => {
                             }
 
                         },
+                        "& img": {
+                            width: '50%',
+                            height: 'auto',
+                        }
 
                     },
                  }}>
@@ -265,31 +272,22 @@ const dataToServer = (e) => {
                         value={value}
                         onChange={handleRadioChange}
                     >
-                        <FormControlLabel
-                            className={value === questions.questions[question].choices[0] ? 'selected formCheck' : 'formCheck'}
-                            value={questions.questions[question].choices[0]}
-                            control={<Radio />}
-                            label={questions.questions[question].choices[0]}
-                            
-                        />
-                        <FormControlLabel
-                            className={value === questions.questions[question].choices[1] ? 'selected formCheck' : 'formCheck'}
-                            value={questions.questions[question].choices[1]}
-                            control={<Radio />}
-                            label={questions.questions[question].choices[1]}
-                        />
-                        <FormControlLabel
-                            className={value === questions.questions[question].choices[2] ? 'selected formCheck' : 'formCheck'}
-                            value={questions.questions[question].choices[2]}
-                            control={<Radio />}
-                            label={questions.questions[question].choices[2]}
-                        />
-                        <FormControlLabel
-                            className={value === questions.questions[question].choices[3] ? 'selected formCheck' : 'formCheck'}
-                            value={questions.questions[question].choices[3]}
-                            control={<Radio />}
-                            label={questions.questions[question].choices[3]}
-                        />
+                        {currentQuestion && currentQuestion.choices.map((choice, index) => (
+                            <FormControlLabel
+                                key={index}
+                                className={value === choice ? 'selected formCheck' : 'formCheck'}
+                                value={choice}
+                                control={<Radio />}
+                                label={
+                                    currentQuestion.type === 'image' ? (
+                                        <img src={choice} alt={`Choice ${index + 1}`}/>
+                                    ) : (
+                                        choice
+                                    )
+                                }
+                            />
+                        ))}
+
                     </RadioGroup>
                     <Button sx={{ m: "auto", mt: 5, width: "40%", fontSize: "1.5em" }} type="submit" variant="outlined">
                         Vérifier

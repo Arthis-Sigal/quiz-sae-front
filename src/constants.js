@@ -3,6 +3,7 @@ export const jsQuizz = {
     questions: [
         {
             question: "En quelle année la fance a gagné la coupe du monde?",
+            type: "text",
             choices: [
                 "2002",
                 "2018",
@@ -13,13 +14,14 @@ export const jsQuizz = {
         },
         {
             question: "Qui à gagner un ballon d'or",
+            type: "image",
             choices: [
-                "Zinedine Zidane",
-                "Kylian Mbappé",
-                "Antoine Griezmann",
-                "Usain Bolt"
+                "src/map.jpg",
+                "src/mape.jpg",
+                "src/map.jpg",
+                "src/map.jpg"
             ],
-            answer: "Zinedine Zidane"
+            answer: "mape.jpg"
         },
         {
             question: "Combien de fois la france a gagné la coupe du monde?",
