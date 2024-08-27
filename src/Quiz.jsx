@@ -1,28 +1,23 @@
-import { Start } from '@mui/icons-material';
-import {Box, Button, Typography, Radio, RadioGroup, FormControlLabel, FormControl, FormHelperText, FormLabel, TextField, Checkbox  } from '@mui/material';
-import { useEffect, useState, useRef } from 'react';
-import * as React from 'react';
-
+// src/Quiz.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 
+const Quiz = ({ questions, setScores, handleRestart }) => {
+  const [value, setValue] = useState('');
+  const [question, setQuestion] = useState(0);
+  const [score, setScore] = useState(0);
+  const totalQuestions = questions.questions.length;
+  const [finish, setFinish] = useState(false);
+  const [start, setStart] = useState(false);
+  const [timerSecond, setTimerSecond] = useState(0);
+  const [timerMinute, setTimerMinute] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(questions.questions[question]);
+    const [questionCount, setQuestionCount] = useState(0);
+  const usedQuestions = useRef([]);
 
-const Quiz = ({ questions }) => {
-    const [value, setValue] = React.useState('');
-    const [question, setQuestion] = React.useState(0);
-    const [score, setScore] = React.useState(0);
-    const totalQuestions = questions.questions.length;
-    const [finish, setFinish] = React.useState(false);
-    const [start, setStart] = React.useState(false);
-    const [timerSecond, setTimerSecond] = React.useState(0);
-    const [timerMinute, setTimerMinute] = React.useState(0);
-    const [currentQuestion, setCurrentQuestion] = useState(questions.questions[question]);
-    const [questionCount, setQuestionCount] = React.useState(0);
-    const usedQuestions = React.useRef([]);
-
-  
-    const handleRadioChange = (event) => {
-      setValue(event.target.value);
-    };
+  const handleRadioChange = (choice) => {
+    setValue(choice);
+  };
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -49,59 +44,38 @@ const Quiz = ({ questions }) => {
         }
       };
 
-      //toute les seconde on ajoute +1 au timer
-    useEffect(() => {
-        if(finish || !start){
-            return;
-        }
-     const interval = setInterval(() => {
-        setTimerSecond(timerSecond + 1)
-        if(timerSecond === 59){
-            setTimerSecond(0);
-            setTimerMinute(timerMinute + 1)
-        }
-        }, 1000);
-        return () => clearInterval(interval);
-    });
-    
+  useEffect(() => {
+    if (finish || !start) {
+      return;
+    }
+    const interval = setInterval(() => {
+      setTimerSecond((prev) => prev + 1);
+      if (timerSecond === 59) {
+        setTimerSecond(0);
+        setTimerMinute((prev) => prev + 1);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [start, finish, timerSecond]);
 
-
-    function shuffle() {
-    if (start === false) 
-        setStart(true);
-    //on tire un chiffre au hasard,
+  function shuffle() {
+    if (start === false) setStart(true);
     let questionNumber = Math.floor(Math.random() * questions.questions.length);
-        //console.log(questionNumber);
-        setQuestion(questionNumber);
+    if (usedQuestions.current.includes(questionNumber)) {
+      shuffle();
+    } else {
+      usedQuestions.current.push(questionNumber);
+      setQuestion(questionNumber);
         setCurrentQuestion(questions.questions[questionNumber]);
 
-    //on crée un tableau pour stoquer le questionNumber
- 
-    //console.log(usedQuestions.current);
-
-
-    //on verifie si le question number est dans le tableau
-    if(usedQuestions.current.includes(questionNumber)){
-        shuffle(questionNumber);
-    }else{
-        //on push dans le tableau sans écrazer les valeurs
-        usedQuestions.current.push(questionNumber);
-        //on set la question
-        //setQuestion(questionNumber);
-        //console.log(usedQuestions);
     }
-    //on verifie si le tableau est égale au nombre de question
-    if(usedQuestions.current.length === questions.questions.length){
-        setFinish(true);
-        //on stop le timer
-        clearInterval();
-    } 
-    //console.log(usedQuestions);
-    
-}
+    if (usedQuestions.current.length === questions.questions.length) {
+      setFinish(true);
+      clearInterval();
+    }
+  }
 
-
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     firstname: '',
     contact: '',
@@ -109,275 +83,89 @@ const [formData, setFormData] = useState({
     rgpd: false,
   });
 
-const handleChange = (e) => {
-setFormData({ ...formData, [e.target.name]: e.target.value });
-};
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-const dataToServer = (e) => {
+  const dataToServer = (e) => {
     e.preventDefault();
-    console.log(JSON.stringify({ formData }));
-    // Envoi de la requête POST à l'API
-    fetch('http://127.0.0.1:8000/api/new', {
-        method: 'POST',
-        headers: {
-        'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ formData })
+    const newScore = {
+      name: `${formData.firstname} ${formData.name}`,
+      score: score,
+      time: `${timerMinute} : ${timerSecond}`
+    };
+    setScores((prevScores) => [...prevScores, newScore]);
+    handleRestart(); // Call the restart function after saving the score
+  };
 
-    })
-    console.log(body)
-    .then(response => {
-    if (!response.ok) {
-        throw new Error('Erreur lors de la requête');
-    }
-    return response.json();
-    })
-    .then(data => {
-    console.log('Réponse de l\'API :', data);
-    // Effectuez des actions supplémentaires en fonction de la réponse de l'API
-    })
-    .catch(error => {
-    console.error('Erreur lors de la requête:', error);
-    });
-};
-
-
-
-
-
-
-    return (
-        <Box>
-            <Typography sx={{
-                textAlign: 'center',
-                fontSize: '3em',
-                margin: '1em',
-                textTransform: 'uppercase',
-            
-            }}>quiz football</Typography>
-
-            { //-----------------------------------------------------------------------------------Début du quiz
-                !start &&
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    width: '40vw',
-                    margin: 'auto',
-                    textAlign: 'center',
-                    marginTop: '15em',
-                }}>
-                    <Typography sx={{
-                        fontSize: '2em',
-                        margin: '1em',
-                    }}>Relevez le défis en répondant à ce quiz !</Typography>
-                    <Button sx={{
-                        margin: 'auto',
-                        width: '50%',
-                        fontSize: '1.5em',
-                    }}
-                    onClick={() => shuffle()}>Commencer</Button>
-                </Box>
-            }
-
-            {// -----------------------------------------------------------------------------------Quizz
-                !finish && start &&
-                <Box component='form' onSubmit={handleSubmit} sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    width: '40vw',
-                    margin: 'auto',
-                    backgroundColor: '#f5f5f5',
-                    padding: '2em',
-                    borderRadius: '10px',
-
-                }}>
-                    <Typography sx={{
-                        textAlign: 'center',
-                        fontSize: '2em',
-                        margin: '1em',
-                        textTransform: 'capitalize',
-                    }}>question : {questionCount + 1} / {totalQuestions - 1 } </Typography>
-                    <Box sx={{
-                        textAlign: 'center',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-around',
-                        alignItems: 'center',
-                        "& p": {
-                            fontSize: '1.5em',
-                        }
-                    }}>
-                        <Typography sx={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '20%',
-                        }}><AccessTimeOutlinedIcon sx={{marginRight: "0.4em"}} /> {timerMinute} : { timerSecond}</Typography>
-                        <Typography sx={{
-                            width: '20%',
-                        }}>score : {score}</Typography>
-
-                    </Box>
-        
-                <FormControl sx={{ 
-                    m: 3,
-                    ".formCheck": {
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        margin: 0,
-                        '& .MuiTypography-root': {
-                            border: '1px solid #000000',
-                            textAlign: 'center',
-                            borderRadius: '10px',
-                            fontSize: '1.5em',
-                            padding: '0.4em',
-                            textTransform: 'capitalize',
-                            width: '70%',
-                            margin: 0,
-                            "&:hover": {
-                                backgroundColor: '#000000',
-                                color: '#ffffff',
-                                cursor: 'pointer',
-                            },                          
-                        },
-                        "& .MuiRadio-root": {
-                            display: 'none',
-                        },
-                        "&.selected": {
-                            "& .MuiTypography-root": {
-
-                                backgroundColor: '#000000',
-                                color: '#ffffff',
-                            }
-
-                        },
-                        "& img": {
-                            width: '50%',
-                            height: 'auto',
-                        }
-
-                    },
-                 }}>
-                    <FormLabel sx={{
-                        fontSize: '1.5em',
-                        textAlign: 'center',
-                        color: '#000000',
-                    }}>{questions.questions[question].question}</FormLabel>
-                    <RadioGroup
-                        aria-labelledby="demo-error-radios"
-                        name="quiz"
-                        value={value}
-                        onChange={handleRadioChange}
-                    >
-                        {currentQuestion && currentQuestion.choices.map((choice, index) => (
-                            <FormControlLabel
-                                key={index}
-                                className={value === choice ? 'selected formCheck' : 'formCheck'}
-                                value={choice}
-                                control={<Radio />}
-                                label={
-                                    currentQuestion.type === 'image' ? (
-                                        <img src={choice} alt={`Choice ${index + 1}`}/>
-                                    ) : (
-                                        choice
-                                    )
-                                }
-                            />
-                        ))}
-
-                    </RadioGroup>
-                    <Button sx={{ m: "auto", mt: 5, width: "40%", fontSize: "1.5em" }} type="submit" variant="outlined">
-                        Vérifier
-                    </Button>
-                </FormControl>
-            </Box>
-
-            }
-            { //-----------------------------------------------------------------------------------Fin du quiz
-                finish &&
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    width: '40vw',
-                    margin: 'auto',
-                    backgroundColor: '#f5f5f5',
-                    padding: '2em',
-                    borderRadius: '10px',
-                
-                }}>
-                    <Typography sx={{
-                        textAlign: 'center',
-                        fontSize: '1.5em',
-                        textTransform: 'uppercase',
-
-                    }}>Félicitation vous avais atteint la fin du quizz</Typography>
-                    <Box sx={{
-                        display: 'flex',
-                        justifyContent: 'space-around',
-                        flexDirection: 'row',
-                        margin: '1em',
-
-                    }}>
-                        <Typography sx={{
-                            textAlign: 'center',
-                            fontSize: '1.5em',
-                            textTransform: 'capitalize',
-                        }}>score : {score}</Typography>
-                        <Typography sx={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            fontSize: '1.5em',
-                            "svg": {
-                                marginRight: '0.4em',
-                            }
-
-                        
-                        }}><AccessTimeOutlinedIcon/> {timerMinute} : { timerSecond}</Typography>
-
-
-                    </Box>
-                    
-                    <Typography sx={{
-                        textAlign: 'center',
-                        fontSize: '1em',
-                        margin: '1em',
-                        textTransform: 'uppercase',
-                    
-                    }}>Enregistré votre score</Typography>
-                    <FormControl  component="form" onSubmit={dataToServer} sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                            "& .MuiTextField-root": {
-                                margin: '0.5em',
-                            },
-                            "& .MuiFormControlLabel-root": {
-                                margin: '0.5em',
-                            }
-                        }}>
-                        <TextField id="name" name="name" label="Nom" variant="outlined" required value={formData.name} onChange={handleChange} />
-                        <TextField id="firstname" name="firstname" label="Prénom" variant="outlined" required value={formData.firstname} onChange={handleChange} />
-                        <TextField id="contact" name="contact" label="Email/Téléphone" variant="outlined" required value={formData.contact} onChange={handleChange} />
-                        <FormControlLabel
-                            control={<Checkbox checked={formData.rgpd} onChange={(e) => setFormData({ ...formData, rgpd: e.target.checked })} />}
-                            label="J'accepte les conditions d'utilisation"
-                        />
-                        <Button sx={{ m: "auto", mt: 5, width: "40%", fontSize: "1.5em" }} type="submit" variant="outlined">Enregistrer</Button>
-                    </FormControl>
-
-                </Box>
-            }
-        
-    
-
-        </Box>
-    );
+  return (
+    <div className="my-4 p-4 rounded bg-light">
+      {!start && (
+        <div className="text-center">
+          <h2 style={{ fontFamily: 'Opti Agency Gothic', color: '#C1272D' }}>Relevez le défi en répondant à ce quiz !</h2>
+          <button className="btn btn-lg" style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff' }} onClick={() => shuffle()}>
+            Commencer
+          </button>
+        </div>
+      )}
+      {!finish && start && (
+        <form onSubmit={handleSubmit}>
+          <div className="text-center">
+            <h4 style={{ fontFamily: 'Barlow', color: '#000000' }}>Question : {currentQuestion + 1} / {totalQuestions}</h4>
+            <p><AccessTimeOutlinedIcon /> {timerMinute} : {timerSecond}</p>
+            <p>Score : {score}</p>
+          </div>
+          <div>
+            <div className="form-group">
+              <label style={{ fontFamily: 'Barlow', color: '#000000' }}>{questions.questions[question].question}</label>
+              <div>
+                {questions.questions[question].choices.map((choice, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={`btn btn-lg btn-block mb-2 ${value === choice ? 'btn-primary' : 'btn-outline-dark'}`}
+                    onClick={() => handleRadioChange(choice)}
+                    style={{ fontFamily: 'Barlow', backgroundColor: value === choice ? '#9D9FA2' : 'transparent', color: value === choice ? '#fff' : '#000000', borderColor: '#000000' }}
+                  >
+                    {choice}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button className="btn btn-lg btn-block" style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff' }} type="submit">Vérifier</button>
+          </div>
+        </form>
+      )}
+      {finish && (
+        <div className="text-center">
+          <div className="alert" style={{ backgroundColor: '#9D9FA2', borderColor: '#9D9FA2', color: '#fff' }}>
+            Félicitations ! Vous avez terminé le quiz.
+          </div>
+          <p>Score : {score}</p>
+          <p><AccessTimeOutlinedIcon /> {timerMinute} : {timerSecond}</p>
+          <form onSubmit={dataToServer}>
+            <div className="form-group">
+              <label htmlFor="name" style={{ fontFamily: 'Barlow', color: '#000000' }}>Nom</label>
+              <input type="text" className="form-control" id="name" name="name" value={formData.name} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="firstname" style={{ fontFamily: 'Barlow', color: '#000000' }}>Prénom</label>
+              <input type="text" className="form-control" id="firstname" name="firstname" value={formData.firstname} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="contact" style={{ fontFamily: 'Barlow', color: '#000000' }}>Email/Téléphone</label>
+              <input type="text" className="form-control" id="contact" name="contact" value={formData.contact} onChange={handleChange} required />
+            </div>
+            <div className="form-check">
+              <input type="checkbox" className="form-check-input" id="rgpd" name="rgpd" checked={formData.rgpd} onChange={(e) => setFormData({ ...formData, rgpd: e.target.checked })} />
+              <label className="form-check-label" htmlFor="rgpd" style={{ fontFamily: 'Barlow', color: '#000000' }}>J'accepte les conditions d'utilisation</label>
+            </div>
+            <button className="btn btn-lg btn-block" style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff' }} type="submit">Enregistrer</button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default Quiz;
