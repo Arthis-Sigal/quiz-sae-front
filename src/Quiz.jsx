@@ -1,8 +1,9 @@
 // src/Quiz.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import TableauDesScores from './TableauDesScores';
 
-const Quiz = ({ questions, setScores, handleRestart }) => {
+const Quiz = ({ questions, handleRestart }) => {
   const [value, setValue] = useState('');
   const [question, setQuestion] = useState(0);
   const [score, setScore] = useState(0);
@@ -14,6 +15,14 @@ const Quiz = ({ questions, setScores, handleRestart }) => {
   const [currentQuestion, setCurrentQuestion] = useState(questions.questions[question]);
     const [questionCount, setQuestionCount] = useState(0);
   const usedQuestions = useRef([]);
+  const [afficheScore, setAfficheScore] = useState(false);
+  const [scores, setScores] = useState([]);
+
+
+
+    //style body
+    document.body.style.overflow = "hidden";
+
 
   const handleRadioChange = (choice) => {
     setValue(choice);
@@ -98,43 +107,112 @@ const Quiz = ({ questions, setScores, handleRestart }) => {
     handleRestart(); // Call the restart function after saving the score
   };
 
+  const handleScore = () => {
+    setAfficheScore(true);
+  }
+
+const handleHome = () => {
+    setAfficheScore(false);
+}
+
   return (
-    <div className="my-4 p-4 rounded bg-light">
-      {!start && (
-        <div className="text-center">
-          <h2 style={{ fontFamily: 'Opti Agency Gothic', color: '#C1272D' }}>Relevez le défi en répondant à ce quiz !</h2>
-          <button className="btn btn-lg" style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff' }} onClick={() => shuffle()}>
+    
+        <div className="container">
+    {
+        !start &&
+
+        <div className="row my-4">
+        <div className="col text-center">
+            <img src="src/image/logoFCF.png" alt="Logo de la ligue" width={"185px"} />
+        </div>
+        </div>
+    }
+    
+    <div className="row">
+      <div className="col">
+      <div className="my-4 p-4" style={{ height: "70vh"}}>
+      {!start && !afficheScore && (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
+            <h1 style={{ fontFamily: "Opti Agency Gothic", color: "#FFFFFF", fontSize: "200px", marginBottom: 0}}>TIR AU QUIZ</h1>
+          <h2 style={{ fontFamily: 'Opti Agency Gothic', color: '#FFFFFF', fontSize: "50px" }}>Marque un maximum de but</h2>
+          <button className="btn btn-lg mt-5" style={{ backgroundColor: '#C2272D', color: '#fff', width: "40%", height: "100px", fontSize: "2.3em" }} onClick={() => shuffle()}>
             Commencer
           </button>
+            <button className="btn btn-lg mt-5" style={{ backgroundColor: '#9E9FA3', color: '#fff', width: "40%", height: "100px", fontSize: "2.3em" }} onClick={() => handleScore()}>
+                Tableau des scores
+            </button>
         </div>
       )}
+        { afficheScore && (
+            <>
+                <TableauDesScores scores={scores} />
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <button className="btn btn-lg mt-5" style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff', width: "20%"}} onClick={() => handleHome()}>
+                        Home
+                    </button>
+                </div>
+            </>
+        )}
       {!finish && start && (
         <form onSubmit={handleSubmit}>
-          <div className="text-center">
-            <h4 style={{ fontFamily: 'Barlow', color: '#000000' }}>Question : {currentQuestion + 1} / {totalQuestions}</h4>
-            <p><AccessTimeOutlinedIcon /> {timerMinute} : {timerSecond}</p>
-            <p>Score : {score}</p>
+        <div className="text-center" style={{ backgroundColor: "#C2272D", width: "65vw", height: "25vh", borderRadius: "15px", fontFamily: "Lilita One", color: "#FFFFFF", padding: "1em", margin: "0 auto 2em auto", fontSize: "1.2rem"}}>
+          <h4 style={{fontSize: "2em"}}>
+            Question : {questionCount + 1} / {totalQuestions - 1}
+          </h4>
+          <div className='mt-3' style={{display: "flex", justifyContent: "space-around"}}>
+            <p style={{fontSize: "1.4em"}}><AccessTimeOutlinedIcon /> {timerMinute} : {timerSecond}</p>
+            <p style={{fontSize: "1.4em"}}>Score : {score}</p>
+
           </div>
-          <div>
-            <div className="form-group">
-              <label style={{ fontFamily: 'Barlow', color: '#000000' }}>{questions.questions[question].question}</label>
-              <div>
-                {questions.questions[question].choices.map((choice, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className={`btn btn-lg btn-block mb-2 ${value === choice ? 'btn-primary' : 'btn-outline-dark'}`}
-                    onClick={() => handleRadioChange(choice)}
-                    style={{ fontFamily: 'Barlow', backgroundColor: value === choice ? '#9D9FA2' : 'transparent', color: value === choice ? '#fff' : '#000000', borderColor: '#000000' }}
-                  >
-                    {choice}
-                  </button>
-                ))}
-              </div>
+
+          <label style={{fontSize: "2em"}}>
+              {questions.questions[question].question}
+        </label>
+        </div>
+  
+        <div>
+          <div className="form-group" style={{ textAlign: "center" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px"}}>
+              {questions.questions[question].choices.map((choice, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  className={`btn btn-lg btn-block mb-2 mt-2 ${value === choice ? 'btn-primary' : 'btn-outline-dark'}`}
+                  onClick={() => handleRadioChange(choice)}
+                  style={{
+                    fontFamily: 'Barlow',
+                    backgroundColor: value === choice ? '#9E9FA3' : '#FFFFFF',
+                    color: value === choice ? '#fff' : '#000000',
+                    borderColor: '#000000',
+                    width: "100%",
+                    height: "200px",
+                    fontSize: "3em"
+                  }}
+                >
+                  {currentQuestion.type === 'image' ? (
+                    <img src={choice} alt={`Choice ${index + 1}`} style={{ width: "20%" }} />
+                  ) : (
+                    choice
+                  )}
+                </button>
+              ))}
             </div>
-            <button className="btn btn-lg btn-block" style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff' }} type="submit">Vérifier</button>
           </div>
-        </form>
+          <div className='text-center'>
+            <button
+                className="btn btn-lg btn-block"
+                style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff', width: "20%"}}
+                type="submit"
+            >
+                Vérifier
+            </button>
+
+          </div>
+
+        </div>
+    
+      </form>
+      
       )}
       {finish && (
         <div className="text-center">
@@ -165,7 +243,13 @@ const Quiz = ({ questions, setScores, handleRestart }) => {
         </div>
       )}
     </div>
+      </div>
+    </div>
+  </div>
+
+    
   );
+
 }
 
 export default Quiz;
