@@ -90,22 +90,45 @@ const Quiz = ({ questions, handleRestart }) => {
     contact: '',
     score: score,
     rgpd: false,
+    newletters: false,
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const dataToServer = (e) => {
+  const dataToServer = async (e) => {
     e.preventDefault();
+  
     const newScore = {
-      name: `${formData.firstname} ${formData.name}`,
-      score: score,
-      time: `${timerMinute} : ${timerSecond}`
+      name: formData.name,
+      firstname: formData.firstname,
+      contact: formData.contact,
+      score: score.toString(),
+      time: `${timerMinute}:${timerSecond}`,
+      rgpd: formData.rgpd,
+      newletters: formData.newletters,
     };
-    setScores((prevScores) => [...prevScores, newScore]);
-    handleRestart(); // Call the restart function after saving the score
+  
+    try {
+      const response = await fetch('http://localhost:3001/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newScore),
+      });
+  
+      if (response.ok) {
+        handleRestart(); // Redémarre le quiz après avoir sauvegardé le score
+      } else {
+        console.error('Failed to submit data');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
+  
 
   const handleScore = () => {
     setAfficheScore(true);
@@ -119,7 +142,7 @@ const handleHome = () => {
     
         <div className="container">
     {
-        !start &&
+        !start && !afficheScore &&
 
         <div className="row my-4">
         <div className="col text-center">
@@ -135,10 +158,10 @@ const handleHome = () => {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
             <h1 style={{ fontFamily: "Opti Agency Gothic", color: "#FFFFFF", fontSize: "200px", marginBottom: 0}}>TIR AU QUIZ</h1>
           <h2 style={{ fontFamily: 'Opti Agency Gothic', color: '#FFFFFF', fontSize: "50px" }}>Marque un maximum de but</h2>
-          <button className="btn btn-lg mt-5" style={{ backgroundColor: '#C2272D', color: '#fff', width: "40%", height: "100px", fontSize: "2.3em" }} onClick={() => shuffle()}>
+          <button className="btn btn-lg mt-5" style={{ backgroundColor: '#C2272D', color: '#fff', width: "40%", height: "100px", fontSize: "2.3em", fontFamily: "Opti Agency Gothic" }} onClick={() => shuffle()}>
             Commencer
           </button>
-            <button className="btn btn-lg mt-5" style={{ backgroundColor: '#9E9FA3', color: '#fff', width: "40%", height: "100px", fontSize: "2.3em" }} onClick={() => handleScore()}>
+            <button className="btn btn-lg mt-5" style={{ backgroundColor: '#9E9FA3', color: '#fff', width: "40%", height: "100px", fontSize: "2.3em", fontFamily: "Opti Agency Gothic" }} onClick={() => handleScore()}>
                 Tableau des scores
             </button>
         </div>
@@ -147,7 +170,7 @@ const handleHome = () => {
             <>
                 <TableauDesScores scores={scores} />
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
-                    <button className="btn btn-lg mt-5" style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff', width: "20%"}} onClick={() => handleHome()}>
+                    <button className="btn btn-lg mt-5" style={{ backgroundColor: '#C2272D', color: '#fff', width: "40%", height: "100px", fontSize: "2.3em", fontFamily: "Opti Agency Gothic"}} onClick={() => handleHome()}>
                         Home
                     </button>
                 </div>
@@ -201,7 +224,7 @@ const handleHome = () => {
           <div className='text-center'>
             <button
                 className="btn btn-lg btn-block"
-                style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff', width: "20%"}}
+                style={{ backgroundColor: '#C2272D', color: '#fff', width: "40%", height: "100px", fontSize: "2.3em", fontFamily: "Opti Agency Gothic"}}
                 type="submit"
             >
                 Vérifier
@@ -215,31 +238,46 @@ const handleHome = () => {
       
       )}
       {finish && (
-        <div className="text-center">
-          <div className="alert" style={{ backgroundColor: '#9D9FA2', borderColor: '#9D9FA2', color: '#fff' }}>
-            Félicitations ! Vous avez terminé le quiz.
+        <div style={{ backgroundColor: "rgba(255, 255, 255, 0.4)", width: "80vw", borderRadius: "15px", fontFamily: "Lilita One", color: "#FFFFFF", padding: "2em", margin: "5em auto 0 auto", fontSize: "1.2rem" }}>
+          <div className="alert text-center" style={{ backgroundColor: '#9D9FA2', borderColor: '#9D9FA2', color: '#fff', fontSize: "1.3em" }}>
+            Félicitations ! Vous avez terminé le quiz, incrivez vous pour apparaitre au classement.
           </div>
-          <p>Score : {score}</p>
-          <p><AccessTimeOutlinedIcon /> {timerMinute} : {timerSecond}</p>
-          <form onSubmit={dataToServer}>
+          <div className='mt-3' style={{display: "flex", justifyContent: "space-around",  fontSize: "1.2em", fontWeight: "bold", color: '#000000', fontFamily: 'Barlow'}}>
+            <p style={{fontSize: "1.4em"}}><AccessTimeOutlinedIcon /> {timerMinute} : {timerSecond}</p>
+            <p style={{fontSize: "1.4em"}}>Score : {score}</p>
+          </div>
+          <form onSubmit={dataToServer} style={{ fontSize: "1.5em", fontWeight: "bold", color: '#000000', fontFamily: 'Barlow'}}>
             <div className="form-group">
-              <label htmlFor="name" style={{ fontFamily: 'Barlow', color: '#000000' }}>Nom</label>
-              <input type="text" className="form-control" id="name" name="name" value={formData.name} onChange={handleChange} required />
+              <label htmlFor="name">Nom*</label>
+              <input type="text" className="form-control" id="name" name="name" style={{fontSize: "0.8em"}} value={formData.name} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label htmlFor="firstname" style={{ fontFamily: 'Barlow', color: '#000000' }}>Prénom</label>
+              <label htmlFor="firstname">Prénom*</label>
               <input type="text" className="form-control" id="firstname" name="firstname" value={formData.firstname} onChange={handleChange} required />
             </div>
             <div className="form-group">
-              <label htmlFor="contact" style={{ fontFamily: 'Barlow', color: '#000000' }}>Email/Téléphone</label>
+              <label htmlFor="contact">Email/Téléphone*</label>
               <input type="text" className="form-control" id="contact" name="contact" value={formData.contact} onChange={handleChange} required />
             </div>
             <div className="form-check">
-              <input type="checkbox" className="form-check-input" id="rgpd" name="rgpd" checked={formData.rgpd} onChange={(e) => setFormData({ ...formData, rgpd: e.target.checked })} />
-              <label className="form-check-label" htmlFor="rgpd" style={{ fontFamily: 'Barlow', color: '#000000' }}>J'accepte les conditions d'utilisation</label>
+              <input type="checkbox" className="form-check-input" id="rgpd" name="rgpd" checked={formData.rgpd} onChange={(e) => setFormData({ ...formData, rgpd: e.target.checked })} required />
+              <label className="form-check-label" htmlFor="rgpd">J'accepte les conditions d'utilisation*</label>
             </div>
-            <button className="btn btn-lg btn-block" style={{ backgroundColor: '#C1272D', borderColor: '#C1272D', color: '#fff' }} type="submit">Enregistrer</button>
-          </form>
+            <div className="form-check">
+              <input type="checkbox" className="form-check-input" id="newletters" name="newletters" checked={formData.newletters} onChange={(e) => setFormData({ ...formData, newletters: e.target.checked })} />
+              <label className="form-check-label" htmlFor="newletters">J'accepte que la FCF m'envois des information</label>
+            </div>
+            <div className='text-center'>
+            <button
+                className="btn btn-lg btn-block mt-4"
+                style={{ backgroundColor: '#C2272D', color: '#fff', width: "40%", height: "100px", fontSize: "2em", fontFamily: "Opti Agency Gothic"}}
+                type="submit"
+            >
+                Envoyer
+            </button>
+
+          </div>
+            </form>
         </div>
       )}
     </div>
